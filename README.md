@@ -109,4 +109,12 @@ bun run typecheck
 
 ## License
 
-MIT
+See [LICENSE](./LICENSE) file.
+
+## Inspirations
+
+This plugin is inspired by:
+
+- **[The Harness Problem](https://blog.can.ac/2026/02/12/the-harness-problem/)** - Blog post on the fundamental challenges of LLM file editing
+- **[Oh-My-Pi](https://github.com/can1357/oh-my-pi)** - Original hashline implementation
+- **[Oh-My-OpenCode](https://github.com/code-yeongyu/oh-my-opencode)** - Port of hashline to OpenCode (this plugin is based on)
