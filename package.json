@@ -1,0 +1,26 @@
+{
+  "name": "hashline",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/core.ts",
+    "./types": "./src/types.ts",
+    "./errors": "./src/errors.ts",
+    "./edit-engine": "./src/edit-engine.ts",
+    "./normalization": "./src/normalization.ts",
+    "./plugin": "./src/plugin.ts",
+    "./tool": "./src/tool.ts"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "latest"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}
