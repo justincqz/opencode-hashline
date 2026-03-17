@@ -8,7 +8,11 @@
     "skipLibCheck": true,
     "outDir": "dist",
     "rootDir": ".",
-    "types": ["bun-types"]
+    "types": ["bun-types"],
+    "paths": {
+      "hashline": ["./src/index.ts"],
+      "hashline/*": ["./src/*.ts"]
+    }
   },
   "include": ["src/**/*.ts", "tests/**/*.ts"],
   "exclude": ["node_modules", "dist"]

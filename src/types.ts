@@ -4,7 +4,7 @@
 
 export const HASH_BITS = 16;
 export const HASH_MASK = 0xFFFF;
-export const HASH_CHARS = 8;
+export const HASH_CHARS = 4;
 
 // Pattern for detecting lines with meaningful content
 export const RE_SIGNIFICANT = /[\p{L}\p{N}]/u;

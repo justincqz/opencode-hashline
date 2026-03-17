@@ -67,9 +67,11 @@ export function createHashlineHooks(): {
     "tool.definition": async (input, output) => {
       if (input.toolID === "read") {
         output.description +=
-          " Output includes LINE#HASH prefixes for content-addressed editing.";
+          " Output includes LINE#HASH prefixes for content-addressed editing. Use hashline-edit tool.";
       } else if (input.toolID === "edit" || input.toolID === "patch") {
-        output.description = "DEPRECATED - use hashline-edit instead.\n\n" + output.description;
+        output.description =
+          "DEPRECATED - For precise line-addressed editing, prefer the hashline-edit tool with LINE#HASH references.\n\n" +
+          output.description;
       }
     },
 
@@ -77,11 +79,12 @@ export function createHashlineHooks(): {
      * Hook 3: Append hashline usage instructions to system prompt.
      */
     "experimental.chat.system.transform": async (input, output) => {
-      const hashlineInstructions = `File editing: Use hashline-edit (not edit/patch). Read first for LINE#HASH anchors.
-- Replace: {op:"replace",pos:"5#a3f1",lines:["new"]} or range {pos:"5#a3f1",end:"10#b2c3",lines:["l1","l2"]}
-- Append: {op:"append",pos:"5#a3f1",lines:["new line"]}
-- Prepend: {op:"prepend",pos:"5#a3f1",lines:["new line"]}
-Re-read on hash mismatch.`;
+      const hashlineInstructions = `When editing files, use LINE#HASH tags. Follow these rules:
+1. Read the file first to get LINE#HASH anchors
+2. Use hashline-edit tool for precise edits
+3. Batch all edits for a file in one call when possible
+4. If you get a hash mismatch error, re-read the file to get updated anchors
+5. Never copy LINE#HASH: prefixes into replacement content`;
 
       output.system.push(hashlineInstructions);
     },

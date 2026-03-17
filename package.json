@@ -1,23 +1,38 @@
 {
-  "name": "hashline",
+  "name": "@justincqz/opencode-hashline",
   "version": "1.0.0",
   "type": "module",
   "main": "src/index.ts",
+  "description": "Content-addressed file editing for OpenCode using LINE#HASH anchors",
+  "keywords": ["opencode", "opencode-plugin", "plugin", "hashline", "file-editing", "content-addressed"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justincqz/opencode-hashline.git"
+  },
+  "homepage": "https://github.com/justincqz/opencode-hashline#readme",
+  "bugs": {
+    "url": "https://github.com/justincqz/opencode-hashline/issues"
+  },
+  "author": "justincqz",
+"license": "MIT",
+  "files": ["src/", "README.md", "LICENSE"],
   "exports": {
-    ".": "./src/core.ts",
-    "./types": "./src/types.ts",
+    ".": "./src/index.ts",
     "./errors": "./src/errors.ts",
     "./edit-engine": "./src/edit-engine.ts",
     "./normalization": "./src/normalization.ts",
-    "./plugin": "./src/plugin.ts",
-    "./tool": "./src/tool.ts"
+    "./plugin": "./src/plugin.ts"
+  },
+  "imports": {
+    "#hashline": "./src/index.ts",
+    "#hashline/*": "./src/*.ts"
+  },
+  "peerDependencies": {
+    "@opencode-ai/plugin": ">=0.13.7"
   },
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@opencode-ai/plugin": "latest"
   },
   "devDependencies": {
     "@types/bun": "latest",
