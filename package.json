@@ -48,7 +48,8 @@
         "format": "biome format --write . && biome lint --write ."
     },
     "devDependencies": {
-        "@types/bun": "latest",
+        "@biomejs/biome": "^2.4.7",
+        "@types/bun": "^1.2.0",
         "typescript": "^5.0.0"
     }
 }

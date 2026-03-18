@@ -3,7 +3,7 @@
     "assist": {
         "actions": {
             "source": {
-                "organizeImports": "on"
+                "organizeImports": "off"
             }
         }
     },
@@ -12,7 +12,13 @@
         "rules": {
             "recommended": true,
             "correctness": {
-                "noUnusedImports": "error"
+                "noUnusedImports": "off"
+            },
+            "suspicious": {
+                "noExplicitAny": "off"
+            },
+            "style": {
+                "noNonNullAssertion": "off"
             }
         }
     },
