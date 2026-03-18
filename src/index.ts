@@ -92,7 +92,7 @@ const HashlinePlugin: Plugin = async (_ctx) => {
     return {
         ...hooks,
         tool: {
-            'hashline-edit': tool({
+            edit: tool({
                 description: HASHLINE_EDIT_DESCRIPTION,
                 args: {
                     path: tool.schema
