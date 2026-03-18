@@ -36,10 +36,7 @@ export function fnv1a(str: string, seed: number = 0): number {
 export function computeLineHash(idx: number, line: string): string {
   line = line.replace(/\r/g, "").trimEnd();
 
-  let seed = 0;
-  if (!RE_SIGNIFICANT.test(line)) {
-    seed = idx;
-  }
+  const seed = idx;
 
   const hash = fnv1a(line, seed);
   return hash.toString(16).padStart(HASH_CHARS, "0");

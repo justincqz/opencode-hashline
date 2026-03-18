@@ -367,11 +367,13 @@ export const hashlineEditTool = {
 };
 
 // Try to export as a proper tool() if @opencode-ai/plugin is available
+// Register as "edit" to override the built-in edit tool
 let _toolExport: unknown = hashlineEditTool;
 try {
   // Dynamic import to avoid hard dependency during tests
   const { tool } = await import("@opencode-ai/plugin" as string);
   _toolExport = tool({
+    name: "edit",
     description: HASHLINE_EDIT_DESCRIPTION,
     args: {
       path: tool.schema.string().describe("File path to edit (relative to worktree, e.g. 'src/index.ts')"),

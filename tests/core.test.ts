@@ -9,6 +9,20 @@ import {
 } from "hashline";
 import { HashlineMismatchError } from "hashline/errors";
 
+// Old algorithm: only seeds for whitespace-only lines (for comparison)
+function computeLineHashOld(idx: number, line: string): string {
+  const RE_SIGNIFICANT = /[\p{L}\p{N}]/u;
+  line = line.replace(/\r/g, "").trimEnd();
+
+  let seed = 0;
+  if (!RE_SIGNIFICANT.test(line)) {
+    seed = idx;
+  }
+
+  const hash = fnv1a(line, seed);
+  return hash.toString(16).padStart(4, "0");
+}
+
 describe("fnv1a", () => {
   test("deterministic - same input produces same output", () => {
     const result1 = fnv1a("hello");
@@ -228,5 +242,166 @@ describe("HashlineMismatchError", () => {
     const error = new HashlineMismatchError(mismatches, fileLines);
 
     expect(error.remaps.get("1#0000")).toBe(`1#${actualHash}`);
+  });
+});
+
+describe("Algorithm comparison: old vs new", () => {
+  test("NEW: same content at different lines produces different hashes", () => {
+    const content = "const x = 1;";
+    const hash1 = computeLineHash(1, content);
+    const hash50 = computeLineHash(50, content);
+    const hash100 = computeLineHash(100, content);
+
+    expect(hash1).not.toBe(hash50);
+    expect(hash50).not.toBe(hash100);
+    expect(hash1).not.toBe(hash100);
+  });
+
+  test("OLD: same content at different lines produces SAME hashes (problem)", () => {
+    const content = "const x = 1;";
+    const hash1 = computeLineHashOld(1, content);
+    const hash50 = computeLineHashOld(50, content);
+    const hash100 = computeLineHashOld(100, content);
+
+    expect(hash1).toBe(hash50);
+    expect(hash50).toBe(hash100);
+    expect(hash1).toBe(hash100);
+  });
+
+  test("NEW: different content at same line produces different hashes", () => {
+    expect(computeLineHash(1, "const x = 1;")).not.toBe(computeLineHash(1, "const y = 2;"));
+    expect(computeLineHash(1, "function foo() {")).not.toBe(computeLineHash(1, "function bar() {"));
+  });
+
+  test("collision rate comparison: 1000 lines with repeated patterns", () => {
+    const lines: string[] = [];
+    // Create realistic source code patterns with repeated content
+    for (let i = 0; i < 1000; i++) {
+      const patterns = [
+        "const value = null;",
+        "return result;",
+        "console.log('debug');",
+        "});",
+        "});",
+        "  // comment",
+        "",
+        "  const temp = null;",
+      ];
+      lines.push(patterns[i % patterns.length]);
+    }
+
+    // New algorithm (always seed with line number)
+    const newHashes = new Set<string>();
+    for (let i = 0; i < lines.length; i++) {
+      newHashes.add(computeLineHash(i + 1, lines[i]));
+    }
+    const newCollisionRate = 1 - newHashes.size / lines.length;
+
+    // Old algorithm (only seed for whitespace)
+    const oldHashes = new Set<string>();
+    for (let i = 0; i < lines.length; i++) {
+      oldHashes.add(computeLineHashOld(i + 1, lines[i]));
+    }
+    const oldCollisionRate = 1 - oldHashes.size / lines.length;
+
+    console.log(`\nCollision rates for 1000 lines with repeated patterns:`);
+    console.log(`  Old algorithm: ${(oldCollisionRate * 100).toFixed(2)}%`);
+    console.log(`  New algorithm: ${(newCollisionRate * 100).toFixed(2)}%`);
+    console.log(`  Improvement: ${((oldCollisionRate - newCollisionRate) * 100).toFixed(2)} percentage points`);
+
+    // New algorithm should have significantly fewer collisions
+    expect(newCollisionRate).toBeLessThan(oldCollisionRate);
+    // New algorithm should have < 1% collision even with repeated content
+    expect(newCollisionRate).toBeLessThan(0.01);
+  });
+
+  test("collision rate comparison: empty/whitespace lines at various positions", () => {
+    const lines: string[] = [];
+    for (let i = 0; i < 500; i++) {
+      const wsPatterns = ["", "   ", "\t", "\t\t", "    ", "\t  "];
+      lines.push(wsPatterns[i % wsPatterns.length]);
+    }
+
+    const newHashes = new Set<string>();
+    for (let i = 0; i < lines.length; i++) {
+      newHashes.add(computeLineHash(i + 1, lines[i]));
+    }
+    const newCollisionRate = 1 - newHashes.size / lines.length;
+
+    const oldHashes = new Set<string>();
+    for (let i = 0; i < lines.length; i++) {
+      oldHashes.add(computeLineHashOld(i + 1, lines[i]));
+    }
+    const oldCollisionRate = 1 - oldHashes.size / lines.length;
+
+    console.log(`\nCollision rates for 500 whitespace-only lines:`);
+    console.log(`  Old algorithm: ${(oldCollisionRate * 100).toFixed(2)}%`);
+    console.log(`  New algorithm: ${(newCollisionRate * 100).toFixed(2)}%`);
+
+    // Both should be low since old already seeded whitespace
+    expect(newCollisionRate).toBeLessThan(0.01);
+    expect(oldCollisionRate).toBeLessThan(0.01);
+  });
+
+  test("collision rate comparison: large file (10000 lines)", () => {
+    const lines: string[] = [];
+    // Simulate a large file with common patterns
+    const commonPatterns = [
+      "function foo() { return 1; }",
+      "const x = null;",
+      "if (condition) {",
+      "  return true;",
+      "}",
+      "export default function() {}",
+      "import { something } from 'module';",
+      "class Foo {",
+      "  constructor() {}",
+      "}",
+    ];
+    for (let i = 0; i < 10000; i++) {
+      lines.push(commonPatterns[i % commonPatterns.length]);
+    }
+
+    const newHashes = new Set<string>();
+    for (let i = 0; i < lines.length; i++) {
+      newHashes.add(computeLineHash(i + 1, lines[i]));
+    }
+    const newCollisionRate = 1 - newHashes.size / lines.length;
+
+    const oldHashes = new Set<string>();
+    for (let i = 0; i < lines.length; i++) {
+      oldHashes.add(computeLineHashOld(i + 1, lines[i]));
+    }
+    const oldCollisionRate = 1 - oldHashes.size / lines.length;
+
+    console.log(`\nCollision rates for 10000 lines with repeated patterns:`);
+    console.log(`  Old algorithm: ${(oldCollisionRate * 100).toFixed(2)}%`);
+    console.log(`  New algorithm: ${(newCollisionRate * 100).toFixed(2)}%`);
+    console.log(`  Improvement: ${((oldCollisionRate - newCollisionRate) * 100).toFixed(2)} percentage points`);
+
+    // New algorithm should be dramatically better
+    expect(newCollisionRate).toBeLessThan(oldCollisionRate);
+    // Even at 10k lines, new should be under 10%
+    expect(newCollisionRate).toBeLessThan(0.1);
+  });
+
+  test("stability: hash changes when line is inserted above (NEW behavior)", () => {
+    // With new algorithm, adding a line above changes the hash
+    const original = "const x = 1;";
+    const hashBeforeInsert = computeLineHash(5, original);
+    const hashAfterInsert = computeLineHash(6, original); // line shifted by 1
+
+    expect(hashBeforeInsert).not.toBe(hashAfterInsert);
+
+    // This is expected - LLM should re-read after any insertion
+  });
+
+  test("stability: OLD algorithm - same content same hash regardless of position", () => {
+    // With old algorithm, content-only determines hash
+    const original = "const x = 1;";
+    const hashAtLine5 = computeLineHashOld(5, original);
+    const hashAtLine100 = computeLineHashOld(100, original);
+
+    expect(hashAtLine5).toBe(hashAtLine100);
   });
 });
